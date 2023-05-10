@@ -11,14 +11,7 @@ fi
 # - PR_NUMBER
 # - PR_TITLE
 setup_from_labeled_event() {
-  label=$(jq -r '.label.name' < "${GITHUB_EVENT_PATH}")
-  if echo "${label}" | grep "^bump:" ; then
-    echo "Found label=${label}" >&2
-    LABELS="${label}"
-  else
-    echo "Attached label name does not match with 'bump:'. label=${label}" >&2
-    exit 0
-  fi
+  LABELS=$(jq -r '.label.name' < "${GITHUB_EVENT_PATH}")
   PR_NUMBER=$(jq -r '.pull_request.number' < "${GITHUB_EVENT_PATH}")
   PR_TITLE=$(jq -r '.pull_request.title' < "${GITHUB_EVENT_PATH}")
 }
@@ -96,12 +89,16 @@ else
   setup_from_push_event
 fi
 
+MAJOR_LABELS=$(echo "${INPUT_MAJOR_LABELS}" | sed 's/\,/\|/g')
+MINOR_LABELS=$(echo "${INPUT_MINOR_LABELS}" | sed 's/\,/\|/g')
+PATCH_LABELS=$(echo "${INPUT_PATCH_LABELS}" | sed 's/\,/\|/g')
+
 BUMP_LEVEL="${INPUT_DEFAULT_BUMP_LEVEL}"
-if echo "${LABELS}" | grep "bump:major" ; then
+if echo "${LABELS}" | grep "${MAJOR_LABELS}" ; then
   BUMP_LEVEL="major"
-elif echo "${LABELS}" | grep "bump:minor" ; then
+elif echo "${LABELS}" | grep "${MINOR_LABELS}" ; then
   BUMP_LEVEL="minor"
-elif echo "${LABELS}" | grep "bump:patch" ; then
+elif echo "${LABELS}" | grep "${PATCH_LABELS}" ; then
   BUMP_LEVEL="patch"
 fi
 
@@ -163,6 +160,13 @@ else
   # Set up Git.
   git config user.name "${INPUT_TAG_AS_USER:-${GITHUB_ACTOR}}"
   git config user.email "${INPUT_TAG_AS_EMAIL:-${GITHUB_ACTOR}@users.noreply.github.com}"
+
+  # Update version file if provided
+  if [ -z "${INPUT_VERSION_FILE}" ]; then 
+    sed "s/${CURRENT_VERSION}/${NEXT_VERSION}/g" "${INPUT_VERSION_FILE}"
+    git commit "${INPUT_VERSION_FILE}" -am "${TAG_MESSAGE}"
+    git push origin
+  fi
 
   # Push the next tag.
   git tag -a "${NEXT_VERSION}" -m "${TAG_MESSAGE}"

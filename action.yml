@@ -18,6 +18,21 @@ inputs:
   tag_as_email:
     description: "Email address to use when creating tags"
     required: false
+  major_labels:
+    description: Comma-separated list of labels to treat as major version bumps
+    default: 'bump:major'
+    required: true
+  minor_labels:
+    description: Comma-separated list of labels to treat as minor version bumps
+    default: 'bump:minor'
+    required: true
+  patch_labels:
+    description: Comma-separated list of labels to treat as patch version bumps
+    default: 'bump:patch'
+    required: true
+  version_file:
+    description: If provided, the file to update the version number within
+    required: false
 outputs:
   current_version:
     description: "current version"

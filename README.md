@@ -24,8 +24,8 @@ inputs:
     description: "Do not actually tag next version if it's true"
     required: false
   github_token:
-    description: 'GITHUB_TOKEN to list pull requests and create tags'
-    default: '${{ github.token }}'
+    description: "GITHUB_TOKEN to list pull requests and create tags"
+    default: "${{ github.token }}"
     required: true
   tag_as_user:
     description: "Name to use when creating tags"
@@ -82,7 +82,7 @@ on:
     branches:
       - master
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   pull_request:
     types:
       - labeled
@@ -116,6 +116,33 @@ jobs:
         uses: haya14busa/action-bumpr@v1
 ```
 
+### Custom Labels
+
+You can customize the labels that `action-bumpr` uses to determine what version
+to bump when a pull request is labeled.
+
+```yaml
+name: release
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types:
+      - labeled
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: haya14busa/action-bumpr@v1
+        with:
+          major_labels: breaking
+          minor_labels: feature,enhancement
+          patch_labels: bug,dependencies
+```
+
 ### Badge
 
 ```md
@@ -123,6 +150,7 @@ jobs:
 ```
 
 ### Note
+
 action-bumpr uses push on master event to run workflow instead of pull_request
 closed (merged) event because github token doesn't have write permission
 for pull_request from fork repository.
